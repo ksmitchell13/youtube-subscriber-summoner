@@ -4,15 +4,17 @@ import { YouTubeChannelData } from '@/utils/youtubeService';
 import ChannelCard from './ChannelCard';
 import MonthlyPerformanceChart from './MonthlyPerformanceChart';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ChannelResultsProps {
   results: YouTubeChannelData[];
   onReset: () => void;
+  isMockData?: boolean;
 }
 
-const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset }) => {
+const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset, isMockData = false }) => {
   const [selectedTab, setSelectedTab] = useState<string>("channels");
   
   // Calculate total metrics
@@ -61,6 +63,15 @@ const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset }) => 
           {results.length} {results.length === 1 ? 'channel' : 'channels'} analyzed
         </div>
       </div>
+      
+      {isMockData && (
+        <Alert variant="warning" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Using mock data mode. To use real YouTube data, replace "YOUR_YOUTUBE_API_KEY" in the code with a valid API key.
+          </AlertDescription>
+        </Alert>
+      )}
       
       {results.length > 1 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 glass-effect p-4 rounded-lg mb-8 animate-slide-down">

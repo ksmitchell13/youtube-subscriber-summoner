@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface YouTubeFormProps {
@@ -84,6 +86,14 @@ const YouTubeForm: React.FC<YouTubeFormProps> = ({ onSubmit, isLoading }) => {
           </div>
         </form>
       </CardContent>
+      <CardFooter className="pt-0 pb-4">
+        <Alert variant="info" className="w-full">
+          <InfoIcon className="h-4 w-4" />
+          <AlertDescription>
+            This app can connect to the real YouTube API. To use it, replace "YOUR_YOUTUBE_API_KEY" in the code with a valid YouTube API key.
+          </AlertDescription>
+        </Alert>
+      </CardFooter>
     </Card>
   );
 };

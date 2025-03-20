@@ -4,26 +4,43 @@ import Header from '@/components/Header';
 import YouTubeForm from '@/components/YouTubeForm';
 import ChannelResults from '@/components/ChannelResults';
 import LoadingState from '@/components/LoadingState';
-import { fetchYouTubeChannelData, YouTubeChannelData } from '@/utils/youtubeService';
+import { fetchYouTubeChannelData, getFallbackChannelData, YouTubeChannelData } from '@/utils/youtubeService';
 import { toast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [channelData, setChannelData] = useState<YouTubeChannelData[] | null>(null);
   const [processingChannels, setProcessingChannels] = useState<string[]>([]);
+  const [useMockData, setUseMockData] = useState(false);
 
   const handleAnalyzeChannels = async (channels: string[]) => {
     try {
       setIsLoading(true);
       setProcessingChannels(channels);
       
-      // In a real application, this would call an actual YouTube API
-      const data = await fetchYouTubeChannelData(channels);
+      let data: YouTubeChannelData[];
+
+      try {
+        // Try to use the real YouTube API
+        data = await fetchYouTubeChannelData(channels);
+        setUseMockData(false);
+      } catch (apiError) {
+        // If there's an API error (like missing API key), fall back to mock data
+        console.error("YouTube API error:", apiError);
+        toast({
+          title: "YouTube API Error",
+          description: (apiError as Error).message || "Falling back to mock data mode",
+          variant: "destructive",
+        });
+        
+        data = getFallbackChannelData(channels);
+        setUseMockData(true);
+      }
       
       setChannelData(data);
       toast({
         title: "Analysis complete",
-        description: `Successfully analyzed ${data.length} channel${data.length !== 1 ? 's' : ''}`,
+        description: `Successfully analyzed ${data.length} channel${data.length !== 1 ? 's' : ''}${useMockData ? ' (using mock data)' : ''}`,
       });
     } catch (error) {
       console.error("Error analyzing channels:", error);
@@ -61,12 +78,16 @@ const Index = () => {
         )}
         
         {!isLoading && channelData && (
-          <ChannelResults results={channelData} onReset={handleReset} />
+          <ChannelResults
+            results={channelData}
+            onReset={handleReset}
+            isMockData={useMockData}
+          />
         )}
       </main>
       
       <footer className="w-full container max-w-7xl mt-16 text-center text-sm text-muted-foreground">
-        <p>Created with precision. Channel data is simulated for demonstration purposes.</p>
+        <p>Created with precision. {useMockData && "Channel data is simulated for demonstration purposes."}</p>
         <p className="mt-1">© {new Date().getFullYear()} ChannelMetrics</p>
       </footer>
     </div>
