@@ -10,10 +10,12 @@ import { toast } from "@/components/ui/use-toast";
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [channelData, setChannelData] = useState<YouTubeChannelData[] | null>(null);
+  const [processingChannels, setProcessingChannels] = useState<string[]>([]);
 
   const handleAnalyzeChannels = async (channels: string[]) => {
     try {
       setIsLoading(true);
+      setProcessingChannels(channels);
       
       // In a real application, this would call an actual YouTube API
       const data = await fetchYouTubeChannelData(channels);
@@ -32,6 +34,7 @@ const Index = () => {
       });
     } finally {
       setIsLoading(false);
+      setProcessingChannels([]);
     }
   };
 
@@ -51,7 +54,10 @@ const Index = () => {
         )}
         
         {isLoading && (
-          <LoadingState />
+          <LoadingState 
+            message="Processing YouTube channel"
+            channelCount={processingChannels.length}
+          />
         )}
         
         {!isLoading && channelData && (
