@@ -82,7 +82,7 @@ const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset }) => 
       <Tabs defaultValue="channels" className="w-full" onValueChange={setSelectedTab}>
         <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
           <TabsTrigger value="channels">Channel Details</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly Performance</TabsTrigger>
+          <TabsTrigger value="monthly">Aggregate Monthly Data</TabsTrigger>
         </TabsList>
         
         <TabsContent value="channels" className="mt-4">

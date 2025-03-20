@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { YouTubeChannelData } from '@/utils/youtubeService';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ChannelCardProps {
   channel: YouTubeChannelData;
@@ -19,8 +20,17 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
+// Helper to format month strings into readable format
+const formatMonth = (month: string): string => {
+  const [year, monthNum] = month.split('-');
+  const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+  return date.toLocaleString('default', { month: 'short' });
+};
+
 const ChannelCard: React.FC<ChannelCardProps> = ({ channel, index }) => {
-  // Prepare data for chart
+  const [selectedChart, setSelectedChart] = useState<string>("videos");
+  
+  // Prepare data for recent videos chart
   const videoData = channel.recentVideos.map(video => ({
     name: video.title.substring(0, 20) + (video.title.length > 20 ? '...' : ''),
     views: video.views
@@ -30,6 +40,15 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, index }) => {
   const engagementRate = channel.recentVideos.length > 0 
     ? (channel.recentVideos.reduce((acc, video) => acc + (video.likes / video.views * 100), 0) / channel.recentVideos.length).toFixed(1) 
     : '0';
+
+  // Get monthly data for the last 12 months
+  const last12MonthsData = [...channel.monthlyPerformance]
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .slice(-12)
+    .map(month => ({
+      ...month,
+      formattedMonth: formatMonth(month.month)
+    }));
 
   return (
     <Card className={`overflow-hidden glass-effect animate-slide-up`} style={{ animationDelay: `${index * 100}ms` }}>
@@ -71,33 +90,97 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, index }) => {
           </div>
         </div>
         
-        <div>
-          <h4 className="text-sm font-medium mb-2">Recent Video Performance</h4>
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={videoData} margin={{ top: 5, right: 5, bottom: 20, left: 0 }}>
-                <XAxis 
-                  dataKey="name" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={60} 
-                  tick={{ fontSize: 10 }} 
-                />
-                <YAxis tick={{ fontSize: 10 }} width={40} tickFormatter={formatNumber} />
-                <Tooltip 
-                  formatter={(value) => [`${formatNumber(value as number)} views`, 'Views']}
-                  contentStyle={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-                    borderRadius: '0.5rem',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                    border: 'none'
-                  }}
-                />
-                <Bar dataKey="views" fill="#FF0000" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <Tabs defaultValue="monthly-views" className="w-full" onValueChange={setSelectedChart}>
+          <TabsList className="grid w-full grid-cols-3 mb-3">
+            <TabsTrigger value="monthly-views">Monthly Views</TabsTrigger>
+            <TabsTrigger value="monthly-videos">Monthly Videos</TabsTrigger>
+            <TabsTrigger value="recent">Recent Videos</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="monthly-views" className="mt-1">
+            <h4 className="text-sm font-medium mb-2">Monthly Views</h4>
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={last12MonthsData} margin={{ top: 5, right: 5, bottom: 20, left: 0 }}>
+                  <XAxis 
+                    dataKey="formattedMonth" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={60} 
+                    tick={{ fontSize: 10 }} 
+                  />
+                  <YAxis tick={{ fontSize: 10 }} width={40} tickFormatter={formatNumber} />
+                  <Tooltip 
+                    formatter={(value) => [`${formatNumber(value as number)} views`, 'Views']}
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      border: 'none'
+                    }}
+                  />
+                  <Bar dataKey="views" fill="#FF0000" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="monthly-videos" className="mt-1">
+            <h4 className="text-sm font-medium mb-2">Videos Published</h4>
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={last12MonthsData} margin={{ top: 5, right: 5, bottom: 20, left: 0 }}>
+                  <XAxis 
+                    dataKey="formattedMonth" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={60} 
+                    tick={{ fontSize: 10 }} 
+                  />
+                  <YAxis tick={{ fontSize: 10 }} width={30} />
+                  <Tooltip 
+                    formatter={(value) => [`${value} videos`, 'Videos Published']}
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      border: 'none'
+                    }}
+                  />
+                  <Bar dataKey="videoCount" fill="#4a5568" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="recent" className="mt-1">
+            <h4 className="text-sm font-medium mb-2">Recent Video Performance</h4>
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={videoData} margin={{ top: 5, right: 5, bottom: 20, left: 0 }}>
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={60} 
+                    tick={{ fontSize: 10 }} 
+                  />
+                  <YAxis tick={{ fontSize: 10 }} width={40} tickFormatter={formatNumber} />
+                  <Tooltip 
+                    formatter={(value) => [`${formatNumber(value as number)} views`, 'Views']}
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      border: 'none'
+                    }}
+                  />
+                  <Bar dataKey="views" fill="#FF0000" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
