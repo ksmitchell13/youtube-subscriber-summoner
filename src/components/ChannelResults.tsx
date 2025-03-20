@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { YouTubeChannelData } from '@/utils/youtubeService';
 import ChannelCard from './ChannelCard';
+import MonthlyPerformanceChart from './MonthlyPerformanceChart';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ChannelResultsProps {
   results: YouTubeChannelData[];
@@ -11,10 +13,29 @@ interface ChannelResultsProps {
 }
 
 const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset }) => {
+  const [selectedTab, setSelectedTab] = useState<string>("channels");
+  
   // Calculate total metrics
   const totalSubscribers = results.reduce((acc, channel) => acc + channel.subscriberCount, 0);
   const totalViews = results.reduce((acc, channel) => acc + channel.viewCount, 0);
   const totalVideos = results.reduce((acc, channel) => acc + channel.videoCount, 0);
+  
+  // Combine monthly data across all channels
+  const combinedMonthlyData = results.reduce((acc, channel) => {
+    channel.monthlyPerformance.forEach(monthData => {
+      const existingMonth = acc.find(item => item.month === monthData.month);
+      if (existingMonth) {
+        existingMonth.views += monthData.views;
+        existingMonth.videoCount += monthData.videoCount;
+      } else {
+        acc.push({ ...monthData });
+      }
+    });
+    return acc;
+  }, [] as Array<{ month: string; videoCount: number; views: number }>);
+  
+  // Sort by month (chronological order)
+  combinedMonthlyData.sort((a, b) => a.month.localeCompare(b.month));
   
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
@@ -58,11 +79,24 @@ const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset }) => 
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {results.map((channel, index) => (
-          <ChannelCard key={channel.id} channel={channel} index={index} />
-        ))}
-      </div>
+      <Tabs defaultValue="channels" className="w-full" onValueChange={setSelectedTab}>
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+          <TabsTrigger value="channels">Channel Details</TabsTrigger>
+          <TabsTrigger value="monthly">Monthly Performance</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="channels" className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {results.map((channel, index) => (
+              <ChannelCard key={channel.id} channel={channel} index={index} />
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="monthly" className="mt-4">
+          <MonthlyPerformanceChart data={combinedMonthlyData} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -12,6 +12,12 @@ export interface YouTubeVideo {
   comments: number;
 }
 
+export interface MonthlyPerformance {
+  month: string; // Format: "YYYY-MM"
+  videoCount: number;
+  views: number;
+}
+
 export interface YouTubeChannelData {
   id: string;
   title: string;
@@ -25,7 +31,54 @@ export interface YouTubeChannelData {
   verified: boolean;
   createdAt: string;
   recentVideos: YouTubeVideo[];
+  monthlyPerformance: MonthlyPerformance[];
 }
+
+// Generate monthly data for the past 24 months
+const generateMonthlyData = (seed: number): MonthlyPerformance[] => {
+  const monthlyData: MonthlyPerformance[] = [];
+  const currentDate = new Date();
+  
+  // Generate data for past 24 months
+  for (let i = 0; i < 24; i++) {
+    const date = new Date(currentDate);
+    date.setMonth(date.getMonth() - i);
+    
+    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Use seed to create deterministic but varied data
+    const monthSeed = seed + (date.getMonth() * date.getFullYear());
+    const rng = (max: number, min: number = 0) => Math.floor((monthSeed % 100) / 100 * (max - min) + min);
+    
+    // Decrease videos and views as we go further back in time (with some randomness)
+    const ageMultiplier = Math.max(0.5, 1 - (i * 0.02));
+    const randomMultiplier = 0.8 + ((monthSeed % 100) / 100) * 0.4; // 0.8 to 1.2
+    
+    let videoCount, views;
+    
+    if (seed % 100 > 90) {  // Very popular
+      videoCount = Math.floor(rng(30, 10) * ageMultiplier * randomMultiplier);
+      views = Math.floor(rng(5000000, 1000000) * ageMultiplier * randomMultiplier);
+    } else if (seed % 100 > 70) {  // Popular
+      videoCount = Math.floor(rng(20, 5) * ageMultiplier * randomMultiplier);
+      views = Math.floor(rng(1000000, 200000) * ageMultiplier * randomMultiplier);
+    } else if (seed % 100 > 40) {  // Medium
+      videoCount = Math.floor(rng(15, 3) * ageMultiplier * randomMultiplier);
+      views = Math.floor(rng(200000, 50000) * ageMultiplier * randomMultiplier);
+    } else {  // Small
+      videoCount = Math.floor(rng(8, 1) * ageMultiplier * randomMultiplier);
+      views = Math.floor(rng(50000, 5000) * ageMultiplier * randomMultiplier);
+    }
+    
+    monthlyData.push({
+      month,
+      videoCount: Math.max(1, videoCount),
+      views: Math.max(100, views)
+    });
+  }
+  
+  return monthlyData.reverse(); // Most recent first
+};
 
 // Generate mock data for YouTube channels
 const generateMockChannelData = (channelName: string): YouTubeChannelData => {
@@ -91,6 +144,9 @@ const generateMockChannelData = (channelName: string): YouTubeChannelData => {
     });
   }
   
+  // Generate monthly performance data
+  const monthlyPerformance = generateMonthlyData(seed);
+  
   return {
     id: channelId,
     title: cleanName,
@@ -103,7 +159,8 @@ const generateMockChannelData = (channelName: string): YouTubeChannelData => {
     country: ['US', 'UK', 'CA', 'AU', 'IN', 'JP', 'BR', 'DE', 'FR', 'ES'][seed % 10],
     verified: seed % 3 === 0,
     createdAt: new Date(Date.now() - (365 * 24 * 60 * 60 * 1000 * rng(10, 1))).toISOString(),
-    recentVideos
+    recentVideos,
+    monthlyPerformance
   };
 };
 
