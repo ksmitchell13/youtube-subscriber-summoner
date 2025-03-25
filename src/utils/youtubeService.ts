@@ -34,7 +34,7 @@ export interface YouTubeChannelData {
 
 // YouTube API key - in a real production app, this would be stored in environment variables
 // This is a placeholder - users will need to replace with their own API key
-const YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY";
+const YOUTUBE_API_KEY = "AIzaSyDoPYUgRS4XfDa4JG-642tazoLpEAEcMi8";
 
 // Get channel ID from channel name, handle or URL
 const getChannelId = async (channelIdentifier: string): Promise<string | null> => {
