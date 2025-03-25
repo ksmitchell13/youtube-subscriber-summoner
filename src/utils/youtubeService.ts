@@ -31,8 +31,31 @@ export interface YouTubeChannelData {
   monthlyPerformance: MonthlyPerformance[];
 }
 
-// YouTube API key is now set - thanks to the user!
+// YouTube API key is set
 const YOUTUBE_API_KEY = "AIzaSyDoPYUgRS4XfDa4JG-642tazoLpEAEcMi8";
+
+// Check if the API is enabled
+const checkApiEnabled = async (): Promise<boolean> => {
+  try {
+    const testUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&type=channel&maxResults=1&key=${YOUTUBE_API_KEY}`;
+    const response = await fetch(testUrl);
+    const data = await response.json();
+    
+    // If the API returns an error about being disabled
+    if (data.error && 
+        data.error.errors && 
+        data.error.errors[0] && 
+        data.error.errors[0].reason === "accessNotConfigured") {
+      console.error("YouTube API is not enabled:", data.error.message);
+      return false;
+    }
+    
+    return !data.error;
+  } catch (error) {
+    console.error("Error checking API status:", error);
+    return false;
+  }
+};
 
 // Get channel ID from channel name, handle or URL
 const getChannelId = async (channelIdentifier: string): Promise<string | null> => {
@@ -62,6 +85,14 @@ const getChannelId = async (channelIdentifier: string): Promise<string | null> =
     
     console.log('Channel search response:', data);
     
+    // If we get an API disabled error, throw a specific error
+    if (data.error && 
+        data.error.errors && 
+        data.error.errors[0] && 
+        data.error.errors[0].reason === "accessNotConfigured") {
+      throw new Error("API_NOT_ENABLED");
+    }
+    
     if (data.items && data.items.length > 0) {
       return data.items[0].snippet.channelId;
     }
@@ -69,6 +100,12 @@ const getChannelId = async (channelIdentifier: string): Promise<string | null> =
     return null;
   } catch (error) {
     console.error(`Error getting channel ID for ${channelIdentifier}:`, error);
+    
+    // Rethrow specific errors
+    if (error instanceof Error && error.message === "API_NOT_ENABLED") {
+      throw error;
+    }
+    
     return null;
   }
 };
@@ -78,7 +115,17 @@ const getChannelStatistics = async (channelId: string): Promise<any> => {
   try {
     const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${channelId}&key=${YOUTUBE_API_KEY}`;
     const response = await fetch(url);
-    return await response.json();
+    const data = await response.json();
+    
+    // If we get an API disabled error, throw a specific error
+    if (data.error && 
+        data.error.errors && 
+        data.error.errors[0] && 
+        data.error.errors[0].reason === "accessNotConfigured") {
+      throw new Error("API_NOT_ENABLED");
+    }
+    
+    return data;
   } catch (error) {
     console.error("Error fetching channel statistics:", error);
     throw error;
@@ -209,6 +256,13 @@ const generateMonthlyData = async (channelId: string): Promise<MonthlyPerformanc
 export const fetchYouTubeChannelData = async (channels: string[]): Promise<YouTubeChannelData[]> => {
   try {
     console.log('Fetching YouTube channel data for:', channels);
+    
+    // First check if the API is enabled
+    const isApiEnabled = await checkApiEnabled();
+    if (!isApiEnabled) {
+      throw new Error("The YouTube Data API v3 is not enabled for your API key. Please visit https://console.developers.google.com/apis/api/youtube.googleapis.com/overview to enable it for your project.");
+    }
+    
     const results: YouTubeChannelData[] = [];
     
     for (const channelIdentifier of channels) {
@@ -263,6 +317,16 @@ export const fetchYouTubeChannelData = async (channels: string[]): Promise<YouTu
     return results;
   } catch (error) {
     console.error("Detailed error in fetchYouTubeChannelData:", error);
+    
+    // Check for specific error about API not being enabled
+    if (error instanceof Error) {
+      if (error.message === "API_NOT_ENABLED" || 
+          error.message.includes("not enabled") || 
+          error.message.includes("disabled")) {
+        throw new Error("The YouTube Data API v3 is not enabled for your API key. Please visit https://console.developers.google.com/apis/api/youtube.googleapis.com/overview to enable it for your project.");
+      }
+    }
+    
     throw error;
   }
 };

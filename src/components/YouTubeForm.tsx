@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon, AlertTriangle } from "lucide-react";
+import { InfoIcon, AlertTriangle, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface YouTubeFormProps {
@@ -56,6 +56,12 @@ const YouTubeForm: React.FC<YouTubeFormProps> = ({ onSubmit, isLoading, apiError
     onSubmit(channels);
   };
 
+  const openApiEnableLink = () => {
+    if (apiError && apiError.includes("https://console.developers.google.com")) {
+      window.open("https://console.developers.google.com/apis/api/youtube.googleapis.com/overview", "_blank");
+    }
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto glass-effect animate-slide-up">
       <CardContent className="pt-6">
@@ -91,8 +97,19 @@ const YouTubeForm: React.FC<YouTubeFormProps> = ({ onSubmit, isLoading, apiError
         {apiError ? (
           <Alert variant="destructive" className="w-full">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {apiError}
+            <AlertDescription className="flex flex-col">
+              <div>{apiError}</div>
+              {apiError.includes("not enabled") && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2 self-start"
+                  onClick={openApiEnableLink}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Enable YouTube API
+                </Button>
+              )}
             </AlertDescription>
           </Alert>
         ) : (

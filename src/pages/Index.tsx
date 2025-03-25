@@ -33,16 +33,23 @@ const Index = () => {
       } catch (apiError: any) {
         console.error("YouTube API error:", apiError);
         
-        // Extract meaningful error message from API response if available
-        let errorMessage = "Using mock data due to API error. Check console for details.";
+        // Extract meaningful error message from API response
+        let errorMessage = "Using mock data due to API error.";
+        let detailedError = "YouTube API error occurred. Check console for details.";
         
-        if (apiError.message && apiError.message.includes("API v3 has not been used")) {
-          errorMessage = "YouTube API not enabled. Please visit Google Cloud Console to enable the YouTube Data API v3 for your project.";
-          setApiError("The YouTube Data API v3 is not enabled for your API key. Visit https://console.developers.google.com/apis/api/youtube.googleapis.com/overview to enable it for your project.");
-        } else if (apiError.message) {
-          errorMessage = apiError.message;
-          setApiError(apiError.message);
+        if (apiError.message) {
+          if (apiError.message.includes("API v3 has not been used") || 
+              apiError.message.includes("not enabled") ||
+              apiError.message.includes("disabled")) {
+            errorMessage = "YouTube API not enabled. Please visit Google Cloud Console to enable the YouTube Data API v3 for your project.";
+            detailedError = "The YouTube Data API v3 is not enabled for your API key. Visit https://console.developers.google.com/apis/api/youtube.googleapis.com/overview to enable it for your project.";
+          } else {
+            errorMessage = apiError.message;
+            detailedError = apiError.message;
+          }
         }
+        
+        setApiError(detailedError);
         
         // Fall back to mock data if the API call fails
         const mockData = getFallbackChannelData(channels);
