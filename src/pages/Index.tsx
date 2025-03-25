@@ -18,30 +18,30 @@ const Index = () => {
       setIsLoading(true);
       setProcessingChannels(channels);
       
-      let data: YouTubeChannelData[];
-
       try {
-        // Try to use the real YouTube API
-        data = await fetchYouTubeChannelData(channels);
+        // Attempt to use the real YouTube API with the provided key
+        const data = await fetchYouTubeChannelData(channels);
+        setChannelData(data);
         setUseMockData(false);
+        
+        toast({
+          title: "Analysis complete",
+          description: `Successfully analyzed ${data.length} channel${data.length !== 1 ? 's' : ''} with real YouTube data`,
+        });
       } catch (apiError) {
-        // If there's an API error (like missing API key), fall back to mock data
         console.error("YouTube API error:", apiError);
+        
+        // Fall back to mock data if the API call fails
+        const mockData = getFallbackChannelData(channels);
+        setChannelData(mockData);
+        setUseMockData(true);
+        
         toast({
           title: "YouTube API Error",
-          description: (apiError as Error).message || "Falling back to mock data mode",
+          description: "Using mock data due to API error. Check console for details.",
           variant: "destructive",
         });
-        
-        data = getFallbackChannelData(channels);
-        setUseMockData(true);
       }
-      
-      setChannelData(data);
-      toast({
-        title: "Analysis complete",
-        description: `Successfully analyzed ${data.length} channel${data.length !== 1 ? 's' : ''}${useMockData ? ' (using mock data)' : ''}`,
-      });
     } catch (error) {
       console.error("Error analyzing channels:", error);
       toast({

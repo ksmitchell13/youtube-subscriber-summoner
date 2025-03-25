@@ -1,4 +1,3 @@
-
 // YouTube Data API Integration
 export interface YouTubeVideo {
   id: string;
@@ -32,8 +31,7 @@ export interface YouTubeChannelData {
   monthlyPerformance: MonthlyPerformance[];
 }
 
-// YouTube API key - in a real production app, this would be stored in environment variables
-// This is a placeholder - users will need to replace with their own API key
+// YouTube API key is now set - thanks to the user!
 const YOUTUBE_API_KEY = "AIzaSyDoPYUgRS4XfDa4JG-642tazoLpEAEcMi8";
 
 // Get channel ID from channel name, handle or URL
@@ -204,11 +202,6 @@ const generateMonthlyData = async (channelId: string): Promise<MonthlyPerformanc
 
 export const fetchYouTubeChannelData = async (channels: string[]): Promise<YouTubeChannelData[]> => {
   try {
-    // Check if API key is set
-    if (YOUTUBE_API_KEY === "YOUR_YOUTUBE_API_KEY") {
-      throw new Error("YouTube API key not configured. Please update the API key in the code.");
-    }
-    
     const results: YouTubeChannelData[] = [];
     
     for (const channelIdentifier of channels) {

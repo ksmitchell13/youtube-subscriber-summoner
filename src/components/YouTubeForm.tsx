@@ -90,7 +90,7 @@ const YouTubeForm: React.FC<YouTubeFormProps> = ({ onSubmit, isLoading }) => {
         <Alert className="w-full">
           <InfoIcon className="h-4 w-4" />
           <AlertDescription>
-            This app can connect to the real YouTube API. To use it, replace "YOUR_YOUTUBE_API_KEY" in the code with a valid YouTube API key.
+            This app is now connected to the real YouTube API and will display actual channel data. Mock data will only be used as a fallback if API errors occur.
           </AlertDescription>
         </Alert>
       </CardFooter>
