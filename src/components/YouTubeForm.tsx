@@ -4,15 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface YouTubeFormProps {
   onSubmit: (channels: string[]) => void;
   isLoading: boolean;
+  apiError?: string | null;
 }
 
-const YouTubeForm: React.FC<YouTubeFormProps> = ({ onSubmit, isLoading }) => {
+const YouTubeForm: React.FC<YouTubeFormProps> = ({ onSubmit, isLoading, apiError }) => {
   const [inputValue, setInputValue] = useState('');
   const { toast } = useToast();
 
@@ -87,12 +88,21 @@ const YouTubeForm: React.FC<YouTubeFormProps> = ({ onSubmit, isLoading }) => {
         </form>
       </CardContent>
       <CardFooter className="pt-0 pb-4">
-        <Alert className="w-full">
-          <InfoIcon className="h-4 w-4" />
-          <AlertDescription>
-            This app is now connected to the real YouTube API and will display actual channel data. Mock data will only be used as a fallback if API errors occur.
-          </AlertDescription>
-        </Alert>
+        {apiError ? (
+          <Alert variant="destructive" className="w-full">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {apiError}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="w-full">
+            <InfoIcon className="h-4 w-4" />
+            <AlertDescription>
+              This app is now connected to the real YouTube API and will display actual channel data. Mock data will only be used as a fallback if API errors occur.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardFooter>
     </Card>
   );

@@ -4,7 +4,7 @@ import { YouTubeChannelData } from '@/utils/youtubeService';
 import ChannelCard from './ChannelCard';
 import MonthlyPerformanceChart from './MonthlyPerformanceChart';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -12,9 +12,10 @@ interface ChannelResultsProps {
   results: YouTubeChannelData[];
   onReset: () => void;
   isMockData?: boolean;
+  apiError?: string | null;
 }
 
-const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset, isMockData = false }) => {
+const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset, isMockData = false, apiError }) => {
   const [selectedTab, setSelectedTab] = useState<string>("channels");
   
   // Calculate total metrics
@@ -66,10 +67,21 @@ const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset, isMoc
       
       {isMockData && (
         <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Using mock data mode. To use real YouTube data, replace "YOUR_YOUTUBE_API_KEY" in the code with a valid API key.
-          </AlertDescription>
+          {apiError ? (
+            <>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                {apiError}
+              </AlertDescription>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Using mock data mode because the API request failed. Check console for more details.
+              </AlertDescription>
+            </>
+          )}
         </Alert>
       )}
       

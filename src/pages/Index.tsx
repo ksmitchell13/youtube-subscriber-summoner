@@ -12,11 +12,13 @@ const Index = () => {
   const [channelData, setChannelData] = useState<YouTubeChannelData[] | null>(null);
   const [processingChannels, setProcessingChannels] = useState<string[]>([]);
   const [useMockData, setUseMockData] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const handleAnalyzeChannels = async (channels: string[]) => {
     try {
       setIsLoading(true);
       setProcessingChannels(channels);
+      setApiError(null);
       
       try {
         // Attempt to use the real YouTube API with the provided key
@@ -28,8 +30,19 @@ const Index = () => {
           title: "Analysis complete",
           description: `Successfully analyzed ${data.length} channel${data.length !== 1 ? 's' : ''} with real YouTube data`,
         });
-      } catch (apiError) {
+      } catch (apiError: any) {
         console.error("YouTube API error:", apiError);
+        
+        // Extract meaningful error message from API response if available
+        let errorMessage = "Using mock data due to API error. Check console for details.";
+        
+        if (apiError.message && apiError.message.includes("API v3 has not been used")) {
+          errorMessage = "YouTube API not enabled. Please visit Google Cloud Console to enable the YouTube Data API v3 for your project.";
+          setApiError("The YouTube Data API v3 is not enabled for your API key. Visit https://console.developers.google.com/apis/api/youtube.googleapis.com/overview to enable it for your project.");
+        } else if (apiError.message) {
+          errorMessage = apiError.message;
+          setApiError(apiError.message);
+        }
         
         // Fall back to mock data if the API call fails
         const mockData = getFallbackChannelData(channels);
@@ -38,7 +51,7 @@ const Index = () => {
         
         toast({
           title: "YouTube API Error",
-          description: "Using mock data due to API error. Check console for details.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -57,6 +70,7 @@ const Index = () => {
 
   const handleReset = () => {
     setChannelData(null);
+    setApiError(null);
   };
 
   return (
@@ -66,7 +80,7 @@ const Index = () => {
       <main className="container w-full max-w-7xl mt-8 flex-1 flex flex-col items-center">
         {!isLoading && !channelData && (
           <div className="my-8 w-full">
-            <YouTubeForm onSubmit={handleAnalyzeChannels} isLoading={isLoading} />
+            <YouTubeForm onSubmit={handleAnalyzeChannels} isLoading={isLoading} apiError={apiError} />
           </div>
         )}
         
@@ -82,6 +96,7 @@ const Index = () => {
             results={channelData}
             onReset={handleReset}
             isMockData={useMockData}
+            apiError={apiError}
           />
         )}
       </main>
