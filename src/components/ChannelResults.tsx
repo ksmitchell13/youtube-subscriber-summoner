@@ -65,7 +65,7 @@ const ChannelResults: React.FC<ChannelResultsProps> = ({ results, onReset, isMoc
       </div>
       
       {isMockData && (
-        <Alert variant="warning" className="mb-6">
+        <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Using mock data mode. To use real YouTube data, replace "YOUR_YOUTUBE_API_KEY" in the code with a valid API key.

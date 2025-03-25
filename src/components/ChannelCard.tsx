@@ -27,6 +27,72 @@ const formatMonth = (month: string): string => {
   return date.toLocaleString('default', { month: 'short' });
 };
 
+// Generate channel content summary based on channel data
+const generateChannelSummary = (channel: YouTubeChannelData) => {
+  // This would normally use ML/AI to analyze video content, but for now we'll use channel metadata
+  // to make educated guesses about the content
+  
+  // Determine video style based on channel name and subscriber count
+  let videoStyle = "Unknown";
+  if (channel.title.toLowerCase().includes("animation") || channel.title.toLowerCase().includes("cartoon")) {
+    videoStyle = "Animation";
+  } else if (channel.subscriberCount > 1000000) {
+    videoStyle = "High production value";
+  } else if (channel.subscriberCount > 100000) {
+    videoStyle = "Semi-professional";
+  } else {
+    videoStyle = "Independent creator";
+  }
+  
+  // Determine video types based on channel name and video count
+  let videoTypes = [];
+  if (channel.title.toLowerCase().includes("podcast") || channel.title.toLowerCase().includes("talk")) {
+    videoTypes.push("Podcast/Talk show");
+  }
+  if (channel.title.toLowerCase().includes("review") || channel.title.toLowerCase().includes("tech")) {
+    videoTypes.push("Reviews");
+  }
+  if (channel.title.toLowerCase().includes("vlog") || channel.title.toLowerCase().includes("daily")) {
+    videoTypes.push("Vlogs");
+  }
+  if (channel.videoCount > 500) {
+    videoTypes.push("Regular uploads");
+  }
+  if (videoTypes.length === 0) {
+    videoTypes.push("Mixed content");
+  }
+  
+  // Determine content based on channel name and engagement
+  let contentThemes = [];
+  const avgLikesPerView = channel.recentVideos.reduce((acc, video) => acc + (video.likes / video.views), 0) / 
+                         (channel.recentVideos.length || 1);
+  
+  if (channel.title.toLowerCase().includes("game") || channel.title.toLowerCase().includes("play")) {
+    contentThemes.push("Gaming");
+  }
+  if (channel.title.toLowerCase().includes("cook") || channel.title.toLowerCase().includes("food")) {
+    contentThemes.push("Cooking/Food");
+  }
+  if (channel.title.toLowerCase().includes("tech") || channel.title.toLowerCase().includes("review")) {
+    contentThemes.push("Technology");
+  }
+  if (channel.title.toLowerCase().includes("beauty") || channel.title.toLowerCase().includes("makeup")) {
+    contentThemes.push("Beauty/Fashion");
+  }
+  if (avgLikesPerView > 0.1) {
+    contentThemes.push("Highly engaging");
+  }
+  if (contentThemes.length === 0) {
+    contentThemes.push("General entertainment");
+  }
+  
+  return {
+    videoStyle,
+    videoTypes: videoTypes.join(", "),
+    contentThemes: contentThemes.join(", ")
+  };
+};
+
 const ChannelCard: React.FC<ChannelCardProps> = ({ channel, index }) => {
   const [selectedChart, setSelectedChart] = useState<string>("videos");
   
@@ -49,6 +115,9 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, index }) => {
       ...month,
       formattedMonth: formatMonth(month.month)
     }));
+  
+  // Generate channel summary
+  const summary = generateChannelSummary(channel);
 
   return (
     <Card className={`overflow-hidden glass-effect animate-slide-up`} style={{ animationDelay: `${index * 100}ms` }}>
@@ -181,6 +250,25 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel, index }) => {
             </div>
           </TabsContent>
         </Tabs>
+        
+        {/* Channel content summary box */}
+        <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border/50">
+          <h4 className="text-sm font-medium mb-2">Channel Content Summary</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex">
+              <span className="font-medium w-32">Video Style:</span>
+              <span>{summary.videoStyle}</span>
+            </div>
+            <div className="flex">
+              <span className="font-medium w-32">Video Types:</span>
+              <span>{summary.videoTypes}</span>
+            </div>
+            <div className="flex">
+              <span className="font-medium w-32">Content Themes:</span>
+              <span>{summary.contentThemes}</span>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
