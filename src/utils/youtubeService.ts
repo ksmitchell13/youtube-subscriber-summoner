@@ -37,6 +37,8 @@ const YOUTUBE_API_KEY = "AIzaSyDoPYUgRS4XfDa4JG-642tazoLpEAEcMi8";
 // Get channel ID from channel name, handle or URL
 const getChannelId = async (channelIdentifier: string): Promise<string | null> => {
   try {
+    console.log(`Attempting to get channel ID for: ${channelIdentifier}`);
+    
     // If it's already a channel ID format
     if (channelIdentifier.startsWith('UC') && channelIdentifier.length > 20) {
       return channelIdentifier;
@@ -53,8 +55,12 @@ const getChannelId = async (channelIdentifier: string): Promise<string | null> =
       cleanIdentifier
     )}&type=channel&key=${YOUTUBE_API_KEY}`;
     
+    console.log(`Search URL: ${searchUrl}`);
+    
     const response = await fetch(searchUrl);
     const data = await response.json();
+    
+    console.log('Channel search response:', data);
     
     if (data.items && data.items.length > 0) {
       return data.items[0].snippet.channelId;
@@ -62,7 +68,7 @@ const getChannelId = async (channelIdentifier: string): Promise<string | null> =
     
     return null;
   } catch (error) {
-    console.error("Error getting channel ID:", error);
+    console.error(`Error getting channel ID for ${channelIdentifier}:`, error);
     return null;
   }
 };
@@ -202,15 +208,19 @@ const generateMonthlyData = async (channelId: string): Promise<MonthlyPerformanc
 
 export const fetchYouTubeChannelData = async (channels: string[]): Promise<YouTubeChannelData[]> => {
   try {
+    console.log('Fetching YouTube channel data for:', channels);
     const results: YouTubeChannelData[] = [];
     
     for (const channelIdentifier of channels) {
+      console.log(`Processing channel: ${channelIdentifier}`);
       const channelId = await getChannelId(channelIdentifier);
       
       if (!channelId) {
         console.error(`Could not find channel ID for: ${channelIdentifier}`);
         continue;
       }
+      
+      console.log(`Found channel ID: ${channelId}`);
       
       // Get channel statistics
       const channelData = await getChannelStatistics(channelId);
@@ -219,6 +229,8 @@ export const fetchYouTubeChannelData = async (channels: string[]): Promise<YouTu
         console.error(`No data found for channel: ${channelIdentifier}`);
         continue;
       }
+      
+      console.log('Channel data retrieved successfully');
       
       const channel = channelData.items[0];
       const snippet = channel.snippet || {};
@@ -250,7 +262,7 @@ export const fetchYouTubeChannelData = async (channels: string[]): Promise<YouTu
     
     return results;
   } catch (error) {
-    console.error("Error fetching YouTube channel data:", error);
+    console.error("Detailed error in fetchYouTubeChannelData:", error);
     throw error;
   }
 };
